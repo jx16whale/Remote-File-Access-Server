@@ -2,8 +2,7 @@
 #define REQUEST_H
 
 #include <string>
-
-#include ".\HashMap.h"
+#include "Response.h"
 
 class Request {
    public:
@@ -12,9 +11,8 @@ class Request {
     std::string pathName;
     Request(int uniqueID, int opcode, const std::string& pathName);
     // ~Request() = default;
-    void process();
+    virtual Response process();
     void setPathName();
-    bool checkMonitor(HashMap hashmap);
 };
 
 #endif  // REQUEST_H

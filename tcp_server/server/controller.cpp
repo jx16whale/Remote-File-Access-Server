@@ -17,6 +17,7 @@
 #include ".\include\WriteRequest.h"
 #include ".\include\marshaller.h"
 #include ".\include\unmarshaller.h"
+#include "include/Response.h"
 
 // controller listens to a port on start and waits for connection
 // on connection
@@ -121,6 +122,26 @@ Request unmarshallRequest(uint8_t *requestBuffer) {
     return req;
 }
 
+void marshallReply(Response reply, uint8_t **replyBuffer) {
+    // Change the pararmeter names as you see fit
+    int requestId = reply.requestId;
+    int status = reply.status;
+    long timeModified = reply.timeModified;
+    std::string data = reply.data;
+    int paddingSize =
+        Marshaller::calculatePadding(static_cast<long long>(data.length()));
+
+    int estimatedSize = sizeof(int) * 3;
+    estimatedSize += sizeof(int) + data.length();
+    estimatedSize += paddingSize;
+    *replyBuffer = new uint8_t[estimatedSize];
+
+    Marshaller::marshallInt(replyBuffer, requestId);
+    Marshaller::marshallInt(replyBuffer, status);
+    Marshaller::marshallLong(replyBuffer, timeModified);
+    Marshaller::marshallString(replyBuffer, paddingSize, data.c_str());
+}
+
 int main() {
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -154,46 +175,7 @@ int main() {
     }
 
     while (true) {
-        // TODO test connection with marshaller
-        // construct connection module object
-        // Initialize Winsock
-
-        // // Listen for incoming connections
-        // if (listen(serverSocket, SOMAXCONN) == SOCKET_ERROR) {
-        //     std::cerr << "listen failed with error: " <<
-        //     WSAGetLastError()
-        //               << std::endl;
-        //     closesocket(serverSocket);
-        //     WSACleanup();
-        //     return 1;
-        // }
-
         std::cout << "Waiting for incoming connection..." << std::endl;
-
-        // // Accept a client connection
-        // SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
-        // if (clientSocket == INVALID_SOCKET) {
-        //     std::cerr << "accept failed with error: " <<
-        //     WSAGetLastError()
-        //               << std::endl;
-        //     closesocket(serverSocket);
-        //     WSACleanup();
-        //     return 1;
-        // }
-
-        // Now you can use the socket for various operations, such as
-        // binding, connecting, etc.
-
-        // Don't forget to clean up Winsock
-
-        // ConnectionModule conn(8080);
-
-        // // Accept incoming connections
-        // int clientSocket = conn.waitForConnection();
-        // if (clientSocket == -1) {
-        //     return 1;  // Exit if accepting connection fails
-        // }
-        // return 2;
 
         // Receive data
         char receiveBuffer[1024];  // Assuming a maximum buffer size of 1024
@@ -205,8 +187,6 @@ int main() {
             std::cerr << "recv failed with error: " << WSAGetLastError()
                       << std::endl;
         } else {
-            // receiveBuffer[bytesReceived] =
-            //     '\0';  // Null-terminate the received data
             std::cout << "Received " << bytesReceived << " bytes: ";
             for (int i = 0; i < bytesReceived; ++i) {
                 std::cout << std::hex << (int)receiveBuffer[i] << " ";
@@ -221,50 +201,10 @@ int main() {
         uint8_t *bufferPtr = bytesArray2;
         Request requestObject = unmarshallRequest(bufferPtr);
 
-        // if (sock.receiveData(receiveBuffer, sizeof(receiveBuffer)) ==
-        // false)
-        // {
-        //     return 1;  // Exit if receiving fails
-        // }
-
-        // TODO Marshaller
-        // pass thru unmarshaller
-        // convert to uint8_t
-        // char receiveBuffer[1024];
-
-        // Request requestObject = Marshaller.unmarshal(receiveBuffer);
-
-        // print typeid requestobject
-        // std::cout << "Request object type: " <<
-        // typeid(requestObject).name()
-        // << std::endl;
-
         // initialise buffer to store return value from services
         std::vector<char> buffer(MAX_RESPONSE_BUFFER_LENGTH);
 
-        // TODO: Iron out with jx on the return var
-        // TODO: change the request interface so that everything is common
-        // read
-        if (requestObject.opcode == 1 || requestObject.opcode == '1') {
-            requestObject.process();
-            requestObject.checkMonitor(globalHashMap);
-            globalHashMap.printAll();
-        }
-        // write
-        else if (requestObject.opcode == 2 || requestObject.opcode == '2') {
-            requestObject.process();
-            // print executed write
-            std::cout << "Executed Write for " << requestObject.pathName
-                      << " with offset " << std::endl;
-        }
-        // monitor
-        else if (requestObject.opcode == 3 || requestObject.opcode == '3') {
-            requestObject.process();
-        } else {
-            // print error message opcode does not exist
-            std::cout << "Error: opcode " << requestObject.opcode
-                      << " does not exist." << std::endl;
-        }
+        Response responseObject = requestObject.process();
         // Close the sockets
 
         // after going thru the server service

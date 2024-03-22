@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include "include/Response.h"
 
 ReadRequest::ReadRequest(int uniqueID, int opcode, const std::string& pathName,
                          int offset, int numBytesToRead)
@@ -10,6 +11,7 @@ ReadRequest::ReadRequest(int uniqueID, int opcode, const std::string& pathName,
       offset(offset),
       numBytesToRead(numBytesToRead) {}
 
+// returns buffer, if empty failure in reading file
 std::vector<char> readFile(const std::string& filePath, int offset,
                            int numBytesToRead) {
     // initialise buffer
@@ -34,10 +36,6 @@ std::vector<char> readFile(const std::string& filePath, int offset,
     return buffer;
 }
 
-void ReadRequest::setPathName() {
-    pathName = "/home/bchun001/tcp_server/file_sys/" + pathName;
-}
-
 void printBuffer(const std::vector<char>& buffer) {
     for (char c : buffer) {
         std::cout << c;
@@ -45,11 +43,10 @@ void printBuffer(const std::vector<char>& buffer) {
     std::cout << std::endl;
 }
 
-void ReadRequest::process() {
-    // format the filepath to relative
-    setPathName();
-    // Implement processing for ReadRequest
+Response ReadRequest::process() {
+    // initialise buffer
     std::vector<char> buffer(ReadRequest::numBytesToRead);
+    // read file path
     buffer = readFile(ReadRequest::pathName, ReadRequest::offset,
                       ReadRequest::numBytesToRead);
 
@@ -58,18 +55,27 @@ void ReadRequest::process() {
               << std::endl;
 
     printBuffer(buffer);
+    // if buffer is empty, status=0
+    int status = buffer.empty() ? 0 : 1;
+    // assign timeModified to current time
+    auto now = std::chrono::system_clock::now();
+    long timeModified = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+
+    //convert vector char to string
+    std::string data(buffer.begin(), buffer.end());
+    return Response(ReadRequest::uniqueID,status,timeModified,data);
 }
 
-// check if file is being monitored by checking if hashmap contains this path
-bool ReadRequest::checkMonitor(HashMap& hashMap) {
-    // format the filepath to relative
-    // check if file is being monitored
-    if (hashMap.contains(ReadRequest::pathName)) {
-        std::cout << "File " << pathName << " is being monitored" << std::endl;
-        return true;
-    } else {
-        std::cout << "File " << pathName << " is not being monitored"
-                  << std::endl;
-        return false;
-    }
-}
+// // check if file is being monitored by checking if hashmap contains this path
+// bool ReadRequest::checkMonitor(HashMap& hashMap) {
+//     // format the filepath to relative
+//     // check if file is being monitored
+//     if (hashMap.contains(ReadRequest::pathName)) {
+//         std::cout << "File " << pathName << " is being monitored" << std::endl;
+//         return true;
+//     } else {
+//         std::cout << "File " << pathName << " is not being monitored"
+//                   << std::endl;
+//         return false;
+//     }
+// }

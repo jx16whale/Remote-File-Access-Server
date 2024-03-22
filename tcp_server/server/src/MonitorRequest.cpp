@@ -15,17 +15,11 @@ MonitorRequest::MonitorRequest(int uniqueID, int opcode,
     expiryTime = now + interval;  // Calculating expiry time
 }
 
-void MonitorRequest::setPathName() {
-    pathName = "/home/bchun001/tcp_server/file_sys/" + pathName;
-}
-
-void MonitorRequest::process(HashMap& hashMap) {
-    // format the filepath to relative
-    setPathName();
-    // convert uniqueID to string
-    std::string uniqueIDStr = std::to_string(uniqueID);
-    // add to hashmap current file:[machineid, expiry time]
-    hashMap.insert(MonitorRequest::pathName, uniqueIDStr,
-                   MonitorRequest::expiryTime);
-    std::cout << "Processed Monitor for " << pathName << std::endl;
+Response MonitorRequest::process() {
+    // // convert uniqueID to string
+    // std::string uniqueIDStr = std::to_string(uniqueID);
+    // // add to hashmap current file:[machineid, expiry time]
+    // hashMap.insert(MonitorRequest::pathName, uniqueIDStr,
+    //                MonitorRequest::expiryTime);
+    // std::cout << "Processed Monitor for " << pathName << std::endl;
 }
