@@ -26,43 +26,31 @@ bool deleteContent(const std::string& filename, int offset, int sizeToDelete) {
         return false; // Return false if unable to open file
     }
 
-    // Convert offset and sizeToDelete to streamoff and streamsize types
-    std::streamoff offsetStream = static_cast<std::streamoff>(offset);
-    std::streamsize sizeStream = static_cast<std::streamsize>(sizeToDelete);
-
-    // Seek to the offset from the beginning of the file
-    file.seekp(offsetStream);
+    // Move to the start offset
+    file.seekp(offset);
 
     // Create a buffer to store the remaining content after the deleted portion
     char buffer;
     std::streampos currentPos = file.tellp();
-    std::streampos endPos;
-
-    // Read the remaining content after the deleted portion
-    while (file.get(buffer)) {
-        currentPos += 1; // Increment the current position
-    }
-    endPos = currentPos;
-
-    // Move back to the start of the deleted portion
-    file.seekp(offsetStream);
 
     // Move the remaining content to fill the deleted portion
-    while (currentPos < endPos) {
+    while (file.get(buffer) && sizeToDelete > 0) {
+        sizeToDelete--; // Decrease the size to delete
+        currentPos+=1;   // Increment the current position
+    }
+
+    // Move back to the start of the deleted portion
+    file.seekp(offset);
+
+    // Move the remaining content to fill the deleted portion
+    while (file.get(buffer)) {
         file.put(file.get());
-        currentPos += 1; // Increment the current position
+        currentPos+=1; // Increment the current position
     }
 
-    // Close the file
+    // Truncate the file to remove the excess content
     file.close();
-
-    // Truncate the file to remove the excess content using std::filesystem
-    try {
-        std::filesystem::resize_file(filename, offsetStream);
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return false; // Return false if an error occurs during truncation
-    }
+    std::filesystem::resize_file(filename, currentPos);
 
     return true; // Return true if successful
 }
@@ -85,7 +73,7 @@ std::string readFile(const std::string& filename) {
     return buffer.str();
 }
 
-// TODO test
+// TODO test deleting too mch
 Response DeleteRequest::process() {
     int status;
     // delete content from file

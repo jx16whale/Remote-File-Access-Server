@@ -85,6 +85,7 @@ Request* unmarshallRequest(uint8_t *requestBuffer) {
             break;
         }
     }
+    return nullptr;
 }
 
 void marshallReply(Response reply, uint8_t **replyBuffer) {

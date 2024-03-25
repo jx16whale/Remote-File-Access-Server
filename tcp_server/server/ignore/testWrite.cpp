@@ -1,11 +1,11 @@
 #include "include\Request.h"
-#include "include\DeleteRequest.h"
+#include "include\WriteRequest.h"
 #include "include\Response.h"
 #include <iostream>
 
 Request* unmarshallRequest4() {
     std::cout << "in unmarhsall" << std::endl;
-    return new DeleteRequest(123,2,"file.txt",0,1);
+    return new WriteRequest(123,2,"file.txt",0,"testing");
 }
 
 int main(){

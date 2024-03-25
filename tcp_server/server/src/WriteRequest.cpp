@@ -60,9 +60,6 @@ std::string readFile3(const std::string& filename) {
     return buffer.str();
 }
 
-
-
-// TODO test
 // return response object with bytestowrite as data , look at status to know if successful or not
 Response WriteRequest::process() {
     // Implement processing
