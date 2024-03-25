@@ -13,6 +13,7 @@ class Request {
     // ~Request() = default;
     virtual Response process();
     void setPathName();
+    long getLastModifiedTime();
 };
 
 #endif  // REQUEST_H

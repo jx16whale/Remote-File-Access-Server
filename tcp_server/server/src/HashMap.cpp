@@ -5,6 +5,18 @@ void HashMap::insert(const std::string& key, const std::string& machineID,
     hashMap[key] = std::make_pair(machineID, expiryTime);
 }
 
+// Function to get the machineID value from the HashMap based on the key
+std::string HashMap::getValue(const std::string& key) {
+    // Check if the key exists in the HashMap
+    if (hashMap.find(key) != hashMap.end()) {
+        // Return the machineID associated with the key
+        return hashMap[key].first;
+    } else {
+        // Return an empty string if the key does not exist
+        return "";
+    }
+}
+
 void HashMap::removeIfExpired() {
     auto now = std::chrono::system_clock::now();
     for (auto it = hashMap.begin(); it != hashMap.end();) {

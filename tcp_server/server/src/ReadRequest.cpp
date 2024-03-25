@@ -5,6 +5,7 @@
 #include <vector>
 #include <chrono>
 #include "..\include\Response.h"
+#include <sys/stat.h>
 
 ReadRequest::ReadRequest(int uniqueID, int opcode, const std::string& pathName,
                          int offset, int numBytesToRead)
@@ -15,7 +16,7 @@ ReadRequest::ReadRequest(int uniqueID, int opcode, const std::string& pathName,
       }
 
 // returns buffer, if empty failure in reading file
-std::vector<char> readFile(const std::string& filePath, int offset,
+std::vector<char> readFile2(const std::string& filePath, int offset,
                            int numBytesToRead) {
     // initialise buffer
     std::vector<char> buffer(numBytesToRead);
@@ -50,7 +51,7 @@ Response ReadRequest::process() {
     // initialise buffer
     std::vector<char> buffer(ReadRequest::numBytesToRead);
     // read file path
-    buffer = readFile(ReadRequest::pathName, ReadRequest::offset,
+    buffer = readFile2(ReadRequest::pathName, ReadRequest::offset,
                       ReadRequest::numBytesToRead);
 
     std::cout << "Processed ReadRequest for " << pathName << " with offset "
@@ -60,9 +61,8 @@ Response ReadRequest::process() {
     printBuffer(buffer);
     // if buffer is empty, status=0
     int status = buffer.empty() ? 0 : 1;
-    // assign timeModified to current time
-    auto now = std::chrono::system_clock::now();
-    long timeModified = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+
+    long timeModified = getLastModifiedTime();
 
     //convert vector char to string
     std::string data(buffer.begin(), buffer.end());

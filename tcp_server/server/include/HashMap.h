@@ -16,6 +16,7 @@ public:
     void removeIfExpired();
     void printAll();
     bool contains(const std::string& key);
+    std::string getValue(const std::string& key);
 };
 
 #endif // HASHMAP_H

@@ -17,6 +17,7 @@
 #include ".\include\DeleteRequest.h"
 #include ".\include\marshaller.h"
 #include ".\include\unmarshaller.h"
+#include ".\include\AttrRequest.h"
 #include "include/Response.h"
 #include <cstdint>
 
@@ -72,6 +73,11 @@ Request* unmarshallRequest(uint8_t *requestBuffer) {
                                    Unmarshaller::unmarshallString(&requestBuffer),
                                    Unmarshaller::unmarshallInt(&requestBuffer),
                                    Unmarshaller::unmarshallInt(&requestBuffer));
+        }
+        case 6:{
+            return new AttrRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+                                   opcode,
+                                   Unmarshaller::unmarshallString(&requestBuffer));
         }
             
         default: {
@@ -166,11 +172,48 @@ int main() {
         std::vector<char> buffer(MAX_RESPONSE_BUFFER_LENGTH);
 
         Response responseObject = requestPtr->process();
+        
+        // if monitor request, add to hashmap
+        if (requestPtr->opcode == 3) {
+            // Downcasting the pointer to the derived class pointer
+            MonitorRequest* derivedPtr = dynamic_cast<MonitorRequest*>(requestPtr);
+
+            // Check if the dynamic_cast was successful
+            if (derivedPtr != nullptr) {
+                // Now you can use the derived class's members using the derivedPtr
+                // convert uniqueID to string
+                std::string uniqueIDStr = std::to_string(requestPtr->uniqueID);
+                // // add to hashmap current file:[machineid, expiry time]
+                globalHashMap.insert(requestPtr->pathName, uniqueIDStr,derivedPtr->expiryTime);
+
+                std::cout << "File " << requestPtr->pathName << " is being monitored" << std::endl;
+            } else {
+                std::cerr << "Error: Unable to downcast pointer." << std::endl;
+            }
+            
+        }
+
+        // WRITE or DELETE need to check hashmap
+        if (requestPtr->opcode == 2 || requestPtr->opcode == 5) {
+            if (globalHashMap.contains(requestPtr->pathName)) {
+                std::cout << "File " << requestPtr->pathName << " is being monitored" << std::endl;
+                // get machineid
+                int reqid = std::stoi(globalHashMap.getValue(requestPtr->pathName));
+                // send alert to monitoring process AKA send TODO
+                Response alertResponse = Response(reqid,responseObject.status,responseObject.timeModified,responseObject.data);
+                // TODO send alertresponse back thru marshaller and socket
+                // print debug + alert.data
+                std::cout << "Alert data: " << alertResponse.data << std::endl;
+            } else {
+                std::cout << "File " << requestPtr->pathName << " is not being monitored"
+                        << std::endl;
+            }
+        }
+
+        // TODO send response thru marshaller and socket
+
         // Close the sockets
 
-        // after going thru the server service
-
-        // create response object
     }
     // closesocket(clientSocket);
     closesocket(serverSocket);

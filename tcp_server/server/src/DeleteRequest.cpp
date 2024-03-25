@@ -8,6 +8,7 @@
 #include <chrono>
 #include "..\include\Response.h"
 #include <unistd.h>
+#include <sys/stat.h>
 
 DeleteRequest::DeleteRequest(int uniqueID, int opcode, const std::string& pathName,
                          int offset, int numBytesToDel)
@@ -84,6 +85,7 @@ std::string readFile(const std::string& filename) {
     return buffer.str();
 }
 
+// TODO test
 Response DeleteRequest::process() {
     int status;
     // delete content from file
@@ -102,8 +104,7 @@ Response DeleteRequest::process() {
               << std::endl;
 
     // assign timeModified to current time
-    auto now = std::chrono::system_clock::now();
-    long timeModified = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+    long timeModified = getLastModifiedTime();
 
     std::string fileContents = readFile(pathName);
     if (!fileContents.empty()) {
