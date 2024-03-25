@@ -7,7 +7,6 @@ class Response {
    public:
     int requestId;
     int status;
-    int timeModified;
     long timeModified;
     std::string data;  // Either to return the data, error message or null?
     // Constructor to initialize members

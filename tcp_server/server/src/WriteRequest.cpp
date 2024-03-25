@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <chrono>
 
 WriteRequest::WriteRequest(int uniqueID, int opcode,
                            const std::string& pathName, int offset,
@@ -39,12 +40,8 @@ bool writeFile(const std::string& filePath, int offset,
 
     return true;
 }
-
-void WriteRequest::setPathName() {
-    pathName = "/home/bchun001/tcp_server/file_sys/" + pathName;
-}
-
-void WriteRequest::process() {
+// return response object with bytestowrite as data , look at status to know if successful or not
+Response WriteRequest::process() {
     // format the filepath to relative
     setPathName();
     // Implement processing for ReadRequest
@@ -53,8 +50,16 @@ void WriteRequest::process() {
     // ReadRequest::numBytesToRead);
 
     // Implement processing
-    writeFile(WriteRequest::pathName, WriteRequest::offset,
+    bool status = writeFile(WriteRequest::pathName, WriteRequest::offset,
               WriteRequest::bytesToWrite);
     std::cout << "Processed Write for " << pathName << " with offset " << offset
               << " and sequence " << std::endl;
+    // convert bool status to int status
+    int intStatus = status ? 1 : 0;
+    
+    // assign timeModified to current time
+    auto now = std::chrono::system_clock::now();
+    long timeModified = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+
+    return Response(uniqueID, intStatus,timeModified, WriteRequest::bytesToWrite);
 }

@@ -63,7 +63,7 @@ Response ReadRequest::process() {
 
     //convert vector char to string
     std::string data(buffer.begin(), buffer.end());
-    return Response(ReadRequest::uniqueID,status,timeModified,data);
+    return Response(uniqueID,status,timeModified,data);
 }
 
 // // check if file is being monitored by checking if hashmap contains this path
