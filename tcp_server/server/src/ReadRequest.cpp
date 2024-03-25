@@ -3,13 +3,16 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include "include/Response.h"
+#include <chrono>
+#include "..\include\Response.h"
 
 ReadRequest::ReadRequest(int uniqueID, int opcode, const std::string& pathName,
                          int offset, int numBytesToRead)
     : Request(uniqueID, opcode, pathName),
       offset(offset),
-      numBytesToRead(numBytesToRead) {}
+      numBytesToRead(numBytesToRead) {
+        std::cout << "ReadRequest constructor called" << std::endl;
+      }
 
 // returns buffer, if empty failure in reading file
 std::vector<char> readFile(const std::string& filePath, int offset,

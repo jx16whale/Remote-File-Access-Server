@@ -1,5 +1,6 @@
 #include "..\include\ReadRequest.h"
 #include "..\include\Response.h"
+#include <iostream>
 
 int main(){
     ReadRequest r(1, 2, "file.txt", 0, 10);

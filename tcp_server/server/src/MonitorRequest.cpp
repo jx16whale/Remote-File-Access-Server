@@ -21,5 +21,5 @@ Response MonitorRequest::process() {
     // // add to hashmap current file:[machineid, expiry time]
     // hashMap.insert(MonitorRequest::pathName, uniqueIDStr,
     //                MonitorRequest::expiryTime);
-    // std::cout << "Processed Monitor for " << pathName << std::endl;
+    std::cout << "Processed Monitor for " << pathName << std::endl;
 }

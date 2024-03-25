@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include "include\Response.h"
 
 ListRequest::ListRequest(int uniqueID, int opcode, const std::string& pathName)
     : Request(uniqueID, opcode, pathName) {}
@@ -12,18 +13,7 @@ ListRequest::ListRequest(int uniqueID, int opcode, const std::string& pathName)
 
 // }
 
-void ListRequest::setPathName() {
-    pathName = "/home/bchun001/tcp_server/file_sys/" + pathName;
-}
-
-void ListRequest::process() {
-    // format the filepath to relative
-    setPathName();
-    // Implement processing for ReadRequest
-    // std::vector<char> buffer(ReadRequest::numBytesToRead);
-    // buffer = readFile(ReadRequest::pathName, ReadRequest::offset,
-    // ReadRequest::numBytesToRead);
-
+Response ListRequest::process() {
     // Implement processing
     std::cout << "Listed for " << pathName << std::endl;
 }

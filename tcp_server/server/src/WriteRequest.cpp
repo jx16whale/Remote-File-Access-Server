@@ -42,13 +42,6 @@ bool writeFile(const std::string& filePath, int offset,
 }
 // return response object with bytestowrite as data , look at status to know if successful or not
 Response WriteRequest::process() {
-    // format the filepath to relative
-    setPathName();
-    // Implement processing for ReadRequest
-    // std::vector<char> buffer(ReadRequest::numBytesToRead);
-    // buffer = readFile(ReadRequest::pathName, ReadRequest::offset,
-    // ReadRequest::numBytesToRead);
-
     // Implement processing
     bool status = writeFile(WriteRequest::pathName, WriteRequest::offset,
               WriteRequest::bytesToWrite);

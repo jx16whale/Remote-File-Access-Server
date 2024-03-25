@@ -9,15 +9,16 @@
 #include <unordered_map>
 #include <utility>  // For std::pair
 #include <vector>
-
-#include ".\include\ConnectionModule.h"
+#include "..\include\HashMap.h"
 #include ".\include\ListRequest.h"
 #include ".\include\MonitorRequest.h"
 #include ".\include\ReadRequest.h"
 #include ".\include\WriteRequest.h"
+#include ".\include\DeleteRequest.h"
 #include ".\include\marshaller.h"
 #include ".\include\unmarshaller.h"
 #include "include/Response.h"
+#include <cstdint>
 
 // controller listens to a port on start and waits for connection
 // on connection
@@ -33,93 +34,51 @@ int MAX_RESPONSE_BUFFER_LENGTH = 100;
 // create global variable globalhashmap
 HashMap globalHashMap;
 
-Request unmarshallRequest(uint8_t *requestBuffer) {
-    Request req(123, 1, "test.txt");
+Request* unmarshallRequest(uint8_t *requestBuffer) {
     // Change the parameters name as you like
     std::cout << "Debug:" << std::endl;
-
-    req.uniqueID = Unmarshaller::unmarshallInt(&requestBuffer);
-    std::cout << "UniqueId: " << req.uniqueID << std::endl;
-    req.opcode = Unmarshaller::unmarshallInt(&requestBuffer);
-    // print req opcode
-    // std::cout << "IN UNMARSHALL Request opcode: " << req.opcode <<
-    // std::endl;
-    std::string filename = Unmarshaller::unmarshallString(&requestBuffer);
+    int opcode = Unmarshaller::unmarshallInt(&requestBuffer);
 
     // Switch for specific request to unmarshall
-    switch (req.opcode) {
+    switch (opcode) {
         case 1: {
-            ReadRequest ReadRequest(
-                req.uniqueID, req.opcode, filename,
-                Unmarshaller::unmarshallInt(&requestBuffer),
-                Unmarshaller::unmarshallInt(&requestBuffer));
-            std::cout << "Received data from client: " << ReadRequest.opcode
-                      << std::endl;
-            std::cout << "Received data from client: " << ReadRequest.uniqueID
-                      << std::endl;
-            std::cout << "Received data from client: " << ReadRequest.pathName
-                      << std::endl;
-
-            // delete[] bufferPtr;
-            delete[] requestBuffer;  // Not sure delete from where but need
-                                     // to delete[] the uint8_t buffer
-            return ReadRequest;
+            return new ReadRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+                                   opcode,
+                                   Unmarshaller::unmarshallString(&requestBuffer),
+                                   Unmarshaller::unmarshallInt(&requestBuffer),
+                                   Unmarshaller::unmarshallInt(&requestBuffer));
         }
-            // case 5: {
-            //     // add code to initialise the request object and return
-            //     it req.offset =
-            //     Unmarshaller::unmarshallInt(requestBuffer);
-            //     req.bytesToReadFrom =
-            //     Unmarshaller::unmarshallInt(requestBuffer);
-
-            //     return req;
-            // }
-
-        case 2: {
-            // add code to create back the structure and return it
-            int offset = Unmarshaller::unmarshallInt(&requestBuffer);
-            std::string bytesToWrite =
-                Unmarshaller::unmarshallString(&requestBuffer);
-            WriteRequest WriteReq(req.uniqueID, req.opcode, filename, offset,
-                                  bytesToWrite);
-            // print uniqueid, opcode, filename, offset, bytestowrite
-            // std::cout << "IN UNMARSHAL WriteRequest uniqueID: " <<
-            // WriteReq.uniqueID << std::endl; std::cout << "IN UNMARSHAL
-            // WriteRequest opcode: " << WriteReq.opcode << std::endl;
-            // std::cout
-            // << "IN UNMARSHAL WriteRequest filename: " << filename <<
-            // std::endl; std::cout << "IN UNMARSHAL WriteRequest
-            // bytestowrite: " << bytesToWrite << std::endl;
-            // // print typeid write req
-            // std::cout << "IN SWITCH WriteRequest type: " <<
-            // typeid(WriteReq).name() << std::endl;
-            return WriteReq;
+        case 2:{
+            return new WriteRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+                                    opcode,
+                                    Unmarshaller::unmarshallString(&requestBuffer),
+                                    Unmarshaller::unmarshallInt(&requestBuffer),
+                                    Unmarshaller::unmarshallString(&requestBuffer));
         }
-
-        case 3: {
-            // add code to create back the structure and return it
-            int interval = Unmarshaller::unmarshallInt(&requestBuffer);
-            MonitorRequest MonitorReq(req.uniqueID, req.opcode, filename,
-                                      interval);
-            return MonitorReq;
+        case 3:{
+            return new MonitorRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+                                    opcode,
+                                    Unmarshaller::unmarshallString(&requestBuffer),
+                                    Unmarshaller::unmarshallInt(&requestBuffer));
         }
-
-        case 4: {
-            ListRequest ListReq(req.uniqueID, req.opcode, filename);
-            return ListReq;
+        case 4:{
+            return new ListRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+                                    opcode,
+                                    Unmarshaller::unmarshallString(&requestBuffer));
         }
-
+        case 5:{
+            return new DeleteRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+                                   opcode,
+                                   Unmarshaller::unmarshallString(&requestBuffer),
+                                   Unmarshaller::unmarshallInt(&requestBuffer),
+                                   Unmarshaller::unmarshallInt(&requestBuffer));
+        }
+            
         default: {
-            // std::cout << "IN UNMARSHAL SWITCH Error: opcode " <<
-            // req.opcode
-            // << " does not exist." << std::endl;
+            std::cout << "IN UNMARSHAL SWITCH Error: opcode " << opcode << " does not exist." << std::endl;
             break;
         }
     }
-    // delete[] bufferPtr;
-    delete[] requestBuffer;  // Not sure delete from where but need to
-                             // delete[] the uint8_t buffer
-    return req;
 }
 
 void marshallReply(Response reply, uint8_t **replyBuffer) {
@@ -143,6 +102,7 @@ void marshallReply(Response reply, uint8_t **replyBuffer) {
 }
 
 int main() {
+    // CONNECTION
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (result != 0) {
@@ -173,6 +133,7 @@ int main() {
         WSACleanup();
         return 1;
     }
+    // END OF CONNECTION PART
 
     while (true) {
         std::cout << "Waiting for incoming connection..." << std::endl;
@@ -199,12 +160,12 @@ int main() {
         }
 
         uint8_t *bufferPtr = bytesArray2;
-        Request requestObject = unmarshallRequest(bufferPtr);
+        Request* requestPtr = unmarshallRequest(bufferPtr);
 
         // initialise buffer to store return value from services
         std::vector<char> buffer(MAX_RESPONSE_BUFFER_LENGTH);
 
-        Response responseObject = requestObject.process();
+        Response responseObject = requestPtr->process();
         // Close the sockets
 
         // after going thru the server service
