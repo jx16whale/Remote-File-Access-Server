@@ -47,11 +47,20 @@ Request* unmarshallRequest(uint8_t *requestBuffer) {
     // Switch for specific request to unmarshall
     switch (opcode) {
         case 1: {
-            return new ReadRequest(Unmarshaller::unmarshallInt(&requestBuffer),
-                                   opcode,
-                                   Unmarshaller::unmarshallString(&requestBuffer),
-                                   Unmarshaller::unmarshallInt(&requestBuffer),
-                                   Unmarshaller::unmarshallInt(&requestBuffer));
+            std::cout << "Unmarshalling ReadRequest" << std::endl;
+            std::cout << "Request ID: " << Unmarshaller::unmarshallInt(&requestBuffer) << std::endl;
+            std::cout << "Opcode: " << opcode << std::endl;
+            std::cout << "Pathname: " << Unmarshaller::unmarshallString(&requestBuffer) << std::endl;
+            std::cout << "Offset: " << Unmarshaller::unmarshallInt(&requestBuffer) << std::endl;
+            std::cout << "NumBytesToRead: " << Unmarshaller::unmarshallInt(&requestBuffer) << std::endl;
+            ReadRequest* rq = new ReadRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+                                         opcode,
+                                         Unmarshaller::unmarshallString(&requestBuffer),
+                                         Unmarshaller::unmarshallInt(&requestBuffer),
+                                         Unmarshaller::unmarshallInt(&requestBuffer));
+            // print rq.pathName
+            std::cout << "rq.pathName: " << rq->pathName << std::endl;
+            return rq;
         }
         case 2:{
             return new WriteRequest(Unmarshaller::unmarshallInt(&requestBuffer),
@@ -193,6 +202,9 @@ int main() {
 
         uint8_t *bufferPtr = bytesArray2;
         Request* requestPtr = unmarshallRequest(bufferPtr);
+        std::cout << "Request ID: " << requestPtr->uniqueID << std::endl;
+        std::cout << "Request Opcode: " << requestPtr->opcode << std::endl;
+
         
         // check if recordReqReply is true and if request.uniqueid is in duplicateRecordHashMap
         if (recordReqReply && duplicateRecordHashMap.find(requestPtr->uniqueID) != duplicateRecordHashMap.end()) {
