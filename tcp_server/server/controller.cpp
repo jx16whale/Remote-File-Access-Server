@@ -94,6 +94,7 @@ Request* unmarshallRequest(uint8_t *requestBuffer) {
             std::string pathname = Unmarshaller::unmarshallString(&requestBuffer);
             int offset = Unmarshaller::unmarshallInt(&requestBuffer);
             int numBytesToDel = Unmarshaller::unmarshallInt(&requestBuffer);
+            std::cout << "numbytestodel: " << numBytesToDel << std::endl;
             return new DeleteRequest(requestID,
                                    opcode,
                                    pathname,
@@ -307,7 +308,7 @@ int main() {
             duplicateRecordHashMap[requestPtr->uniqueID] = charPtr;
             std::cout << "Request response saved in duplicateRecordHashMap" << std::endl;
         }
-
+        
         sendto(serverSocket,charPtr, estSize,0, (const struct sockaddr *) &clientAddress, len);
     }
     // closesocket(clientSocket);
