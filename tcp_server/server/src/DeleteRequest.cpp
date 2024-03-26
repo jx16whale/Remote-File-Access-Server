@@ -18,6 +18,46 @@ DeleteRequest::DeleteRequest(int uniqueID, int opcode, const std::string& pathNa
         std::cout << "DeleteReq constructor called" << std::endl;
       }
 
+void readFileWithOffsetAndPrint(const std::string& filename, std::size_t offset, std::size_t sizeToDelete) {
+    // Open the file
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    // Find the size of the file
+    file.seekg(0, std::ios::end);
+    std::size_t fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Ensure the offset is valid
+    if (offset >= fileSize) {
+        std::cerr << "Offset is beyond the file size." << std::endl;
+        return;
+    }
+
+    // Read from byte 0 to the specified offset
+    std::vector<char> combinedBuffer(fileSize-sizeToDelete);
+    file.read(combinedBuffer.data(), offset);
+
+    // Seek to the desired offset
+    file.seekg(offset, std::ios::beg);
+
+    // Skip the bytes to be deleted
+    file.seekg(sizeToDelete, std::ios::cur);
+
+    // Read the remaining content into a buffer
+    file.read(combinedBuffer.data() + offset, fileSize - offset - sizeToDelete);
+
+    // Print the buffer contents
+    std::cout << "Contents of the file after skipping offset and deleting specified size:\n";
+    std::cout.write(combinedBuffer.data(), combinedBuffer.size());
+
+    // Close the file
+    file.close();
+}
+
 bool deleteContent(const std::string& filename, int offset, int sizeToDelete) {
     std::fstream file(filename, std::ios::in | std::ios::out | std::ios::binary);
 
@@ -49,8 +89,8 @@ bool deleteContent(const std::string& filename, int offset, int sizeToDelete) {
     }
 
     // Truncate the file to remove the excess content
-    file.close();
-    std::filesystem::resize_file(filename, currentPos);
+    // file.close();
+    // std::filesystem::resize_file(filename, currentPos);
 
     return true; // Return true if successful
 }
@@ -75,19 +115,20 @@ std::string readFile(const std::string& filename) {
 
 // TODO test deleting too mch
 Response DeleteRequest::process() {
-    int status;
+    int status=1; // TODO change to 0 if failed
+    readFileWithOffsetAndPrint(DeleteRequest::pathName, DeleteRequest::offset, DeleteRequest::numBytesToDel);
     // delete content from file
-    if (deleteContent(DeleteRequest::pathName, DeleteRequest::offset, DeleteRequest::numBytesToDel)){
-        status=1;
-        std::cout << "DeleteRequest: Deleted content from " << pathName << " with offset ";
-        }
-    else{
-        status=0;
-        std::cout << "DeleteRequest: Failed to delete content from " << pathName << " with offset ";
-    }
+    // if (deleteContent(DeleteRequest::pathName, DeleteRequest::offset, DeleteRequest::numBytesToDel)){
+    //     status=1;
+    //     std::cout << "DeleteRequest: Deleted content from " << pathName << " with offset ";
+    //     }
+    // else{
+    //     status=0;
+    //     std::cout << "DeleteRequest: Failed to delete content from " << pathName << " with offset ";
+    // }
 
 
-    std::cout << "Processed ReadRequest for " << pathName << " with offset "
+    std::cout << "Processed DeleteRequest for " << pathName << " with offset "
               << offset << " and numBytestoDel " << numBytesToDel
               << std::endl;
 

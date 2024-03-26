@@ -20,6 +20,7 @@
 #include ".\include\AttrRequest.h"
 #include "include/Response.h"
 #include <cstdint>
+#include <ws2tcpip.h>
 
 // controller listens to a port on start and waits for connection
 // on connection
@@ -31,6 +32,8 @@
 //     continues the connection listening loop
 
 int MAX_RESPONSE_BUFFER_LENGTH = 100;
+
+
 
 // create global variable globalhashmap
 HashMap globalHashMap;
@@ -127,7 +130,8 @@ int main() {
     }
 
     // Bind the socket to an address and port
-    sockaddr_in serverAddress;
+    sockaddr_in serverAddress, clientAddress;
+    socklen_t len = sizeof(clientAddress);  //len is value/result 
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr =
         htonl(INADDR_ANY);  // Accept connections from any address
@@ -150,7 +154,8 @@ int main() {
                                    // bytes
 
         int bytesReceived = recvfrom(serverSocket, receiveBuffer,
-                                     sizeof(receiveBuffer) - 1, 0, NULL, NULL);
+                                     sizeof(receiveBuffer) - 1, 0, ( struct sockaddr *) &clientAddress, &len);
+
         if (bytesReceived == SOCKET_ERROR) {
             std::cerr << "recv failed with error: " << WSAGetLastError()
                       << std::endl;
@@ -202,7 +207,7 @@ int main() {
                 int reqid = std::stoi(globalHashMap.getValue(requestPtr->pathName));
                 // send alert to monitoring process AKA send TODO
                 Response alertResponse = Response(reqid,responseObject.status,responseObject.timeModified,responseObject.data);
-                // TODO send alertresponse back thru marshaller and socket
+                // TODO AFTER CFM SEND SUCCESS send alertresponse back thru marshaller and socket
                 // print debug + alert.data
                 std::cout << "Alert data: " << alertResponse.data << std::endl;
             } else {
@@ -211,10 +216,14 @@ int main() {
             }
         }
 
-        // TODO send response thru marshaller and socket
-
-        // Close the sockets
-
+        // TODO TEST send response thru marshaller and socket
+        uint8_t* bufferPtr;
+        marshallReply(responseObject, &bufferPtr);
+        char* charPtr;
+        for (int i = 0; i < sizeof(buffer); i++) {
+            charPtr[i] = bufferPtr[i];
+        }
+        sendto(serverSocket,charPtr, strlen(charPtr),0, (const struct sockaddr *) &clientAddress, len);
     }
     // closesocket(clientSocket);
     closesocket(serverSocket);

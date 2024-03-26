@@ -5,7 +5,7 @@
 
 Request* unmarshallRequest4() {
     std::cout << "in unmarhsall" << std::endl;
-    return new DeleteRequest(123,2,"file.txt",0,1);
+    return new DeleteRequest(123,2,"file.txt",5,10);
 }
 
 int main(){
