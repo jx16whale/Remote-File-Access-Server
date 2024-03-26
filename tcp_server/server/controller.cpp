@@ -205,7 +205,7 @@ int main() {
                 std::cout << "File " << requestPtr->pathName << " is being monitored" << std::endl;
                 // get machineid
                 int reqid = std::stoi(globalHashMap.getValue(requestPtr->pathName));
-                // send alert to monitoring process AKA send TODO
+                // create alert response
                 Response alertResponse = Response(reqid,responseObject.status,responseObject.timeModified,responseObject.data);
                 // TODO AFTER CFM SEND SUCCESS send alertresponse back thru marshaller and socket
                 // print debug + alert.data
