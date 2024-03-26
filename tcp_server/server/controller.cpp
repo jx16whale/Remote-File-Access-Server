@@ -37,6 +37,7 @@ int MAX_RESPONSE_BUFFER_LENGTH = 100;
 
 // create global variable globalhashmap
 HashMap globalHashMap;
+std::unordered_map<int, char*> duplicateRecordHashMap;
 
 Request* unmarshallRequest(uint8_t *requestBuffer) {
     // Change the parameters name as you like
@@ -112,6 +113,24 @@ void marshallReply(Response reply, uint8_t **replyBuffer) {
 }
 
 int main() {
+
+    std::string input;
+    bool recordReqReply;
+    // Read input from standard input
+    std::cout << "Enter 0 for AT MOST ONCE or 1 for AT LEAST ONCE: ";
+    std::cin >> input;
+    // Check if the input is "0" or "1"
+    if (input == "0") {
+        std::cout << "Input is 0." << std::endl;
+        recordReqReply = true;
+    } else if (input == "1") {
+        std::cout << "Input is 1." << std::endl;
+        recordReqReply = false;
+    } else {
+        std::cout << "Invalid input." << std::endl;
+        return 0;
+    }
+
     // CONNECTION
     WSADATA wsaData;
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -147,6 +166,7 @@ int main() {
     // END OF CONNECTION PART
 
     while (true) {
+        // at least once no record is taken
         std::cout << "Waiting for incoming connection..." << std::endl;
 
         // Receive data
@@ -173,10 +193,22 @@ int main() {
 
         uint8_t *bufferPtr = bytesArray2;
         Request* requestPtr = unmarshallRequest(bufferPtr);
+        
+        // check if recordReqReply is true and if request.uniqueid is in duplicateRecordHashMap
+        if (recordReqReply && duplicateRecordHashMap.find(requestPtr->uniqueID) != duplicateRecordHashMap.end()) {
+            // if true, skip the process() and send the response back to client
+            // get the response from duplicateRecordHashMap
+            char* duplicateResponse = duplicateRecordHashMap[requestPtr->uniqueID];
+            // send response back to client
+            sendto(serverSocket,duplicateResponse, strlen(duplicateResponse),0, (const struct sockaddr *) &clientAddress, len);
+            std::cout << "Duplicate request found. Sending back the response to client." << std::endl;
+            continue;
+        }
 
         // initialise buffer to store return value from services
         std::vector<char> buffer(MAX_RESPONSE_BUFFER_LENGTH);
 
+        // each request performs their own process() eg. write will write, read will read...
         Response responseObject = requestPtr->process();
         
         // if monitor request, add to hashmap
@@ -191,7 +223,6 @@ int main() {
                 std::string uniqueIDStr = std::to_string(requestPtr->uniqueID);
                 // // add to hashmap current file:[machineid, expiry time]
                 globalHashMap.insert(requestPtr->pathName, uniqueIDStr,derivedPtr->expiryTime);
-
                 std::cout << "File " << requestPtr->pathName << " is being monitored" << std::endl;
             } else {
                 std::cerr << "Error: Unable to downcast pointer." << std::endl;
@@ -217,11 +248,16 @@ int main() {
         }
 
         // TODO TEST send response thru marshaller and socket
-        uint8_t* bufferPtr;
-        marshallReply(responseObject, &bufferPtr);
+        uint8_t* bufferPtrResponse;
+        marshallReply(responseObject, &bufferPtrResponse);
         char* charPtr;
-        for (int i = 0; i < sizeof(buffer); i++) {
-            charPtr[i] = bufferPtr[i];
+        for (int i = 0; i < sizeof(bufferPtrResponse); i++) {
+            charPtr[i] = bufferPtrResponse[i];
+        }
+        // TODO before sending save it as a record in duplicateRecordHashMap
+        if (recordReqReply) {
+            duplicateRecordHashMap[requestPtr->uniqueID] = charPtr;
+            std::cout << "Request response saved in duplicateRecordHashMap" << std::endl;
         }
         sendto(serverSocket,charPtr, strlen(charPtr),0, (const struct sockaddr *) &clientAddress, len);
     }

@@ -1,5 +1,6 @@
 #include "..\include\HashMap.h"
 
+// inserts key (filename) and value (machineID,expirytime) into hashmap
 void HashMap::insert(const std::string& key, const std::string& machineID,
                      const std::chrono::system_clock::time_point& expiryTime) {
     hashMap[key] = std::make_pair(machineID, expiryTime);
@@ -17,6 +18,7 @@ std::string HashMap::getValue(const std::string& key) {
     }
 }
 
+// remove entire entry from hashmap if expired
 void HashMap::removeIfExpired() {
     auto now = std::chrono::system_clock::now();
     for (auto it = hashMap.begin(); it != hashMap.end();) {
@@ -37,6 +39,7 @@ void HashMap::printAll() {
     }
 }
 
+// removes if expired and checks if key exists
 bool HashMap::contains(const std::string& keyToCheck) {
     // Remove expired entries
     removeIfExpired();

@@ -24,7 +24,7 @@ bool readFileWithOffsetAndPrint(const std::string& filename, std::size_t offset,
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         std::cerr << "Error opening file: " << filename << std::endl;
-        return;
+        return false;
     }
 
     // Find the size of the file
