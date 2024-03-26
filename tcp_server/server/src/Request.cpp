@@ -4,6 +4,7 @@
 
 Request::Request(int uniqueID, int opcode, const std::string& pathName)
     : uniqueID(uniqueID), opcode(opcode), pathName(pathName) {
+        std::cout << "Request constructor called" << std::endl;
         setPathName();
     }
 

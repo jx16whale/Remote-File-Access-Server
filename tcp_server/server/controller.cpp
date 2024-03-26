@@ -42,55 +42,69 @@ std::unordered_map<int, char*> duplicateRecordHashMap;
 Request* unmarshallRequest(uint8_t *requestBuffer) {
     // Change the parameters name as you like
     std::cout << "Debug:" << std::endl;
+    int requestID = Unmarshaller::unmarshallInt(&requestBuffer);
     int opcode = Unmarshaller::unmarshallInt(&requestBuffer);
 
     // Switch for specific request to unmarshall
     switch (opcode) {
         case 1: {
             std::cout << "Unmarshalling ReadRequest" << std::endl;
-            std::cout << "Request ID: " << Unmarshaller::unmarshallInt(&requestBuffer) << std::endl;
-            std::cout << "Opcode: " << opcode << std::endl;
-            std::cout << "Pathname: " << Unmarshaller::unmarshallString(&requestBuffer) << std::endl;
-            std::cout << "Offset: " << Unmarshaller::unmarshallInt(&requestBuffer) << std::endl;
-            std::cout << "NumBytesToRead: " << Unmarshaller::unmarshallInt(&requestBuffer) << std::endl;
-            ReadRequest* rq = new ReadRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+            std::string pathname = Unmarshaller::unmarshallString(&requestBuffer);
+            int offset = Unmarshaller::unmarshallInt(&requestBuffer);
+            int bytestoread = Unmarshaller::unmarshallInt(&requestBuffer);
+            ReadRequest* rq = new ReadRequest(requestID,
                                          opcode,
-                                         Unmarshaller::unmarshallString(&requestBuffer),
-                                         Unmarshaller::unmarshallInt(&requestBuffer),
-                                         Unmarshaller::unmarshallInt(&requestBuffer));
-            // print rq.pathName
+                                         pathname,
+                                         offset,
+                                         bytestoread);
+            if (rq == nullptr) {
+                std::cout << "ptr is null" << std::endl;
+            }
+            else{
+                std::cout << "rq.uniqueID: " << rq->uniqueID << std::endl;
+            }
             std::cout << "rq.pathName: " << rq->pathName << std::endl;
             return rq;
         }
         case 2:{
-            return new WriteRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+            std::string pathname = Unmarshaller::unmarshallString(&requestBuffer);
+            int offset = Unmarshaller::unmarshallInt(&requestBuffer);
+            std::string bytesToWrite = Unmarshaller::unmarshallString(&requestBuffer);
+            return new WriteRequest(requestID,
                                     opcode,
-                                    Unmarshaller::unmarshallString(&requestBuffer),
-                                    Unmarshaller::unmarshallInt(&requestBuffer),
-                                    Unmarshaller::unmarshallString(&requestBuffer));
+                                    pathname,
+                                    offset,
+                                    bytesToWrite);
         }
         case 3:{
-            return new MonitorRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+            std::string pathname = Unmarshaller::unmarshallString(&requestBuffer);
+            int lengthofinterval = Unmarshaller::unmarshallInt(&requestBuffer);
+            return new MonitorRequest(requestID,
                                     opcode,
-                                    Unmarshaller::unmarshallString(&requestBuffer),
-                                    Unmarshaller::unmarshallInt(&requestBuffer));
+                                    pathname,
+                                    lengthofinterval);
         }
         case 4:{
-            return new ListRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+            std::string pathname = Unmarshaller::unmarshallString(&requestBuffer);
+            return new ListRequest(requestID,
                                     opcode,
-                                    Unmarshaller::unmarshallString(&requestBuffer));
+                                    pathname);
         }
         case 5:{
-            return new DeleteRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+            std::string pathname = Unmarshaller::unmarshallString(&requestBuffer);
+            int offset = Unmarshaller::unmarshallInt(&requestBuffer);
+            int numBytesToDel = Unmarshaller::unmarshallInt(&requestBuffer);
+            return new DeleteRequest(requestID,
                                    opcode,
-                                   Unmarshaller::unmarshallString(&requestBuffer),
-                                   Unmarshaller::unmarshallInt(&requestBuffer),
-                                   Unmarshaller::unmarshallInt(&requestBuffer));
+                                   pathname,
+                                   offset,
+                                   numBytesToDel);
         }
         case 6:{
-            return new AttrRequest(Unmarshaller::unmarshallInt(&requestBuffer),
+            std::string pathname = Unmarshaller::unmarshallString(&requestBuffer);
+            return new AttrRequest(requestID,
                                    opcode,
-                                   Unmarshaller::unmarshallString(&requestBuffer));
+                                   pathname);
         }
             
         default: {
@@ -101,7 +115,7 @@ Request* unmarshallRequest(uint8_t *requestBuffer) {
     return nullptr;
 }
 
-void marshallReply(Response reply, uint8_t **replyBuffer) {
+std::pair<int, uint8_t*> marshallReply(Response reply) {
     // Change the pararmeter names as you see fit
     int requestId = reply.requestId;
     int status = reply.status;
@@ -113,12 +127,19 @@ void marshallReply(Response reply, uint8_t **replyBuffer) {
     int estimatedSize = sizeof(int) * 3;
     estimatedSize += sizeof(int) + data.length();
     estimatedSize += paddingSize;
-    *replyBuffer = new uint8_t[estimatedSize];
-
-    Marshaller::marshallInt(replyBuffer, requestId);
-    Marshaller::marshallInt(replyBuffer, status);
-    Marshaller::marshallLong(replyBuffer, timeModified);
-    Marshaller::marshallString(replyBuffer, paddingSize, data.c_str());
+    uint8_t* replyBuffer = new uint8_t[estimatedSize];
+    uint8_t* ptrToptr = replyBuffer;
+    Marshaller::marshallInt(&ptrToptr, requestId);
+    Marshaller::marshallInt(&ptrToptr, status);
+    Marshaller::marshallLong(&ptrToptr, timeModified);
+    Marshaller::marshallString(&ptrToptr, paddingSize, data.c_str());
+    //print replybuffer
+    std::cout << "ReplyBuffer in marshallReply: ";
+    for (int i = 0; i < estimatedSize; i++) {
+        std::cout << static_cast<int>(replyBuffer[i]) << ",";
+    }
+    std::cout << std::endl;
+    return std::make_pair(estimatedSize, replyBuffer);
 }
 
 int main() {
@@ -204,6 +225,7 @@ int main() {
         Request* requestPtr = unmarshallRequest(bufferPtr);
         std::cout << "Request ID: " << requestPtr->uniqueID << std::endl;
         std::cout << "Request Opcode: " << requestPtr->opcode << std::endl;
+        std::cout << "Request Pathname: " << requestPtr->pathName << std::endl;
 
         
         // check if recordReqReply is true and if request.uniqueid is in duplicateRecordHashMap
@@ -222,6 +244,8 @@ int main() {
 
         // each request performs their own process() eg. write will write, read will read...
         Response responseObject = requestPtr->process();
+        //print timemodified of responseobj
+        std::cout << "TimeModified: " << responseObject.timeModified << std::endl;
         
         // if monitor request, add to hashmap
         if (requestPtr->opcode == 3) {
@@ -260,18 +284,31 @@ int main() {
         }
 
         // TODO TEST send response thru marshaller and socket
-        uint8_t* bufferPtrResponse;
-        marshallReply(responseObject, &bufferPtrResponse);
-        char* charPtr;
-        for (int i = 0; i < sizeof(bufferPtrResponse); i++) {
-            charPtr[i] = bufferPtrResponse[i];
+        auto result = marshallReply(responseObject);
+        int estSize = result.first;
+        uint8_t* bufferPtrResponse = result.second;
+        
+        std::cout << "Length of response: " << estSize << std::endl;
+
+        // Allocate memory for the char array
+        char* charPtr = (char*)malloc((estSize + 1) * sizeof(char));
+
+        std::cout << estSize << std::endl;
+        std::cout << "Char array after marshall: ";
+        
+        // Iterate over the uint8_t array and copy the values to the char array
+        for (size_t i = 0; i < estSize; i++) {
+            charPtr[i] = (char)bufferPtrResponse[i];
+            std::cout << charPtr[i] << ",";
         }
+
         // TODO before sending save it as a record in duplicateRecordHashMap
         if (recordReqReply) {
             duplicateRecordHashMap[requestPtr->uniqueID] = charPtr;
             std::cout << "Request response saved in duplicateRecordHashMap" << std::endl;
         }
-        sendto(serverSocket,charPtr, strlen(charPtr),0, (const struct sockaddr *) &clientAddress, len);
+
+        sendto(serverSocket,charPtr, estSize,0, (const struct sockaddr *) &clientAddress, len);
     }
     // closesocket(clientSocket);
     closesocket(serverSocket);

@@ -11,7 +11,15 @@
 WriteRequest::WriteRequest(int uniqueID, int opcode, const std::string& pathName, int offset,std::string bytesToWrite)
     : Request(uniqueID, opcode, pathName),
       offset(offset),
-      bytesToWrite(bytesToWrite) {}
+      bytesToWrite(bytesToWrite) {
+        std::cout << "WriteReq constructor called" << std::endl;
+        std::cout << "Unique ID: " << uniqueID << std::endl;
+        std::cout << "Opcode: " << opcode << std::endl;
+        std::cout << "Pathname: " << pathName << std::endl;
+        std::cout << "Offset: " << offset << std::endl;
+        std::cout << "Bytes to write: " << bytesToWrite << std::endl;
+
+      }
 
 bool writeFile(const std::string& filePath, int offset,const std::string bytesToWrite) {
     // Open the file in binary mode for writing

@@ -1,5 +1,5 @@
 #include "../include/marshaller.h"
-
+#include <iostream>
 #include <winsock2.h>
 // #include <netinet/in.h>
 
@@ -17,6 +17,7 @@ union FloatAndInt {
 void Marshaller::marshallString(uint8_t **buffer, int paddingSize,
                                 std::string string) {
     size_t length = string.length();
+    std::cout << "Length of string: " << length << std::endl;
     uint32_t netLength = htonl(
         static_cast<uint32_t>(length));  // htonl accepts unsigned integers
 
