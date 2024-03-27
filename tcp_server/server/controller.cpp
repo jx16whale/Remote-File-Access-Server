@@ -203,10 +203,8 @@ int main() {
         // Receive data
         char receiveBuffer[1024];  // Assuming a maximum buffer size of 1024
                                    // bytes
-
         int bytesReceived = recvfrom(serverSocket, receiveBuffer,
                                      sizeof(receiveBuffer) - 1, 0, ( struct sockaddr *) &clientAddress, &len);
-
         if (bytesReceived == SOCKET_ERROR) {
             std::cerr << "recv failed with error: " << WSAGetLastError()
                       << std::endl;
@@ -224,11 +222,8 @@ int main() {
 
         uint8_t *bufferPtr = bytesArray2;
         Request* requestPtr = unmarshallRequest(bufferPtr);
-        std::cout << "Request ID: " << requestPtr->uniqueID << std::endl;
-        std::cout << "Request Opcode: " << requestPtr->opcode << std::endl;
-        std::cout << "Request Pathname: " << requestPtr->pathName << std::endl;
+        std::cout << "Unmarshalled Request" << std::endl;
 
-        
         // check if recordReqReply is true and if request.uniqueid is in duplicateRecordHashMap
         if (recordReqReply && duplicateRecordHashMap.find(requestPtr->uniqueID) != duplicateRecordHashMap.end()) {
             // if true, skip the process() and send the response back to client
@@ -245,8 +240,6 @@ int main() {
 
         // each request performs their own process() eg. write will write, read will read...
         Response responseObject = requestPtr->process();
-        //print timemodified of responseobj
-        std::cout << "TimeModified: " << responseObject.timeModified << std::endl;
         
         // if monitor request, add to hashmap
         if (requestPtr->opcode == 3) {
@@ -256,21 +249,20 @@ int main() {
             // Check if the dynamic_cast was successful
             if (derivedPtr != nullptr) {
                 // Now you can use the derived class's members using the derivedPtr
-                // convert uniqueID to string
-                std::string uniqueIDStr = std::to_string(requestPtr->uniqueID);
                 // // add to hashmap current file:[machineid, expiry time]
                 globalHashMap.insert(requestPtr->pathName, clientAddress,derivedPtr->expiryTime);
                 std::cout << "File " << requestPtr->pathName << " is being monitored" << std::endl;
             } else {
                 std::cerr << "Error: Unable to downcast pointer." << std::endl;
             }
-            
+            // wun send message back to client
+            continue;
         }
 
         // WRITE or DELETE need to check hashmap
         if (requestPtr->opcode == 2 || requestPtr->opcode == 5) {
             if (globalHashMap.contains(requestPtr->pathName)) {
-                std::cout << "File " << requestPtr->pathName << " is being monitored" << std::endl;
+                std::cout << "File " << requestPtr->pathName << "that you are editing is being monitored!!!" << std::endl;
                 // get clientaddress from hashmap
                 sockaddr_in monitoringSock = globalHashMap.getValue(requestPtr->pathName);
                 // create alert response
@@ -279,24 +271,18 @@ int main() {
                 auto result2 = marshallReply(responseObject);
                 int alertEstSize = result2.first;
                 uint8_t* alertBufferPtrResponse = result2.second;
-                std::cout << "Length of marshalled response: " << alertEstSize << std::endl;
                 // Allocate memory for the char array
                 char* alertCharPtr = (char*)malloc((alertEstSize + 1) * sizeof(char));
-
-                std::cout << alertEstSize << std::endl;
-                std::cout << "Char array after marshall: ";
-                
+                std::cout << "sending these over to the monitoring client: ";
                 // Iterate over the uint8_t array and copy the values to the char array
                 for (size_t i = 0; i < alertEstSize; i++) {
                     alertCharPtr[i] = (char)alertBufferPtrResponse[i];
                     std::cout << alertCharPtr[i] << ",";
                 }
                 sendto(serverSocket,alertCharPtr, alertEstSize,0, (const struct sockaddr *) &monitoringSock, len);
-                
-                // print debug + alert.data
-                std::cout << "Alert data: " << alertResponse.data << std::endl;
+                std::cout << "\n";
             } else {
-                std::cout << "File " << requestPtr->pathName << " is not being monitored"
+                std::cout << "File " << requestPtr->pathName << "that you are editing is not being monitored"
                         << std::endl;
             }
         }
@@ -305,8 +291,6 @@ int main() {
         auto result = marshallReply(responseObject);
         int estSize = result.first;
         uint8_t* bufferPtrResponse = result.second;
-        
-        std::cout << "Length of marshalled response: " << estSize << std::endl;
 
         // Allocate memory for the char array
         char* charPtr = (char*)malloc((estSize + 1) * sizeof(char));
@@ -325,7 +309,6 @@ int main() {
             duplicateRecordHashMap[requestPtr->uniqueID] = charPtr;
             std::cout << "Request response saved in duplicateRecordHashMap" << std::endl;
         }
-        
         sendto(serverSocket,charPtr, estSize,0, (const struct sockaddr *) &clientAddress, len);
     }
     // closesocket(clientSocket);

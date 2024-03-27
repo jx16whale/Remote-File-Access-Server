@@ -13,9 +13,6 @@ WriteRequest::WriteRequest(int uniqueID, int opcode, const std::string& pathName
       offset(offset),
       bytesToWrite(bytesToWrite) {
         std::cout << "WriteReq constructor called" << std::endl;
-        std::cout << "Unique ID: " << uniqueID << std::endl;
-        std::cout << "Opcode: " << opcode << std::endl;
-        std::cout << "Pathname: " << pathName << std::endl;
         std::cout << "Offset: " << offset << std::endl;
         std::cout << "Bytes to write: " << bytesToWrite << std::endl;
 
@@ -82,11 +79,8 @@ Response WriteRequest::process() {
     long timeModified = getLastModifiedTime();
 
     std::string fileContents = readFile3(pathName);
-    if (!fileContents.empty()) {
-        std::cout << "File contents:" << std::endl;
-        std::cout << fileContents << std::endl;
-    } else {
-        std::cout << "Failed to read file." << std::endl;
+    if (fileContents.empty()) {
+        std::cout << "ERROR: Failed to read file." << std::endl;
     }
 
     return Response(uniqueID, intStatus,timeModified, fileContents);

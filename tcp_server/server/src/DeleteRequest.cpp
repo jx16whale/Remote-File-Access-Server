@@ -17,6 +17,8 @@ DeleteRequest::DeleteRequest(int uniqueID, int opcode, const std::string& pathNa
       offset(offset),
       numBytesToDel(numBytesToDel) {
         std::cout << "DeleteReq constructor called" << std::endl;
+        std::cout << "Offset: " << offset << std::endl;
+        std::cout << "numBytesToDel: " << numBytesToDel << std::endl;
       }
 
 bool readFileWithOffsetAndPrint(const std::string& filename, std::size_t offset, std::size_t sizeToDelete) {
@@ -54,9 +56,9 @@ bool readFileWithOffsetAndPrint(const std::string& filename, std::size_t offset,
     // Close the file
     file.close();
 
-    // Print the buffer contents
-    std::cout << "Contents of the file after skipping offset and deleting specified size:\n";
-    std::cout.write(combinedBuffer.data(), combinedBuffer.size());
+    // // Print the buffer contents
+    // std::cout << "Contents of the file after skipping offset and deleting specified size:\n";
+    // std::cout.write(combinedBuffer.data(), combinedBuffer.size());
 
     // Open the file for writing
     std::ofstream outFile(filename); // Open in text mode
@@ -69,8 +71,6 @@ bool readFileWithOffsetAndPrint(const std::string& filename, std::size_t offset,
     outFile.write(combinedBuffer.data(), combinedBuffer.size());
     // Close the file
     outFile.close();
-
-    std::cout << "File content overwritten with modified content." << std::endl;
     return true;
 }
 
@@ -105,18 +105,11 @@ Response DeleteRequest::process() {
     
     };
 
-    std::cout << "Processed DeleteRequest for " << pathName << " with offset "
-              << offset << " and numBytestoDel " << numBytesToDel
-              << std::endl;
-
     // assign timeModified to current time
     long timeModified = getLastModifiedTime();
 
     std::string fileContents = readFile(pathName);
-    if (!fileContents.empty()) {
-        std::cout << "File contents:" << std::endl;
-        std::cout << fileContents << std::endl;
-    } else {
+    if (fileContents.empty()) {
         std::cout << "Failed to read file." << std::endl;
     }
 

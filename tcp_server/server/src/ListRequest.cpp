@@ -8,7 +8,9 @@
 #include <sys/stat.h>
 
 ListRequest::ListRequest(int uniqueID, int opcode, const std::string& pathName)
-    : Request(uniqueID, opcode, pathName) {}
+    : Request(uniqueID, opcode, pathName) {
+        std::cout << "ListRequest constructor called" << std::endl;
+    }
 
 
 std::string listDirectory(const std::string& dirPath) {

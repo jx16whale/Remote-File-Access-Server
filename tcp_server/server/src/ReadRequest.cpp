@@ -13,6 +13,8 @@ ReadRequest::ReadRequest(int uniqueID, int opcode, const std::string& pathName,
       offset(offset),
       numBytesToRead(numBytesToRead) {
         std::cout << "ReadRequest constructor called" << std::endl;
+        std::cout << "offset: " << offset << std::endl;
+        std::cout << "numBytesToRead: " << numBytesToRead << std::endl;
       }
 
 // returns buffer, if empty failure in reading file
@@ -58,7 +60,6 @@ Response ReadRequest::process() {
               << offset << " and numBytesToRead " << numBytesToRead
               << std::endl;
 
-    printBuffer(buffer);
     // if buffer is empty, status=0
     int status = buffer.empty() ? 0 : 1;
 
@@ -68,17 +69,3 @@ Response ReadRequest::process() {
     std::string data(buffer.begin(), buffer.end());
     return Response(uniqueID,status,timeModified,data);
 }
-
-// // check if file is being monitored by checking if hashmap contains this path
-// bool ReadRequest::checkMonitor(HashMap& hashMap) {
-//     // format the filepath to relative
-//     // check if file is being monitored
-//     if (hashMap.contains(ReadRequest::pathName)) {
-//         std::cout << "File " << pathName << " is being monitored" << std::endl;
-//         return true;
-//     } else {
-//         std::cout << "File " << pathName << " is not being monitored"
-//                   << std::endl;
-//         return false;
-//     }
-// }

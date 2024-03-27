@@ -6,7 +6,9 @@
 #include "..\include\Response.h"
 
 AttrRequest::AttrRequest(int uniqueID, int opcode, const std::string& pathName)
-    : Request(uniqueID, opcode, pathName) {}
+    : Request(uniqueID, opcode, pathName) {
+        std::cout << "AttrRequest constructor called" << std::endl;
+    }
 
 Response AttrRequest::process() {
     long timeMod = getLastModifiedTime();

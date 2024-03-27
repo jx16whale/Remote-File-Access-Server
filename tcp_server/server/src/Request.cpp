@@ -5,6 +5,9 @@
 Request::Request(int uniqueID, int opcode, const std::string& pathName)
     : uniqueID(uniqueID), opcode(opcode), pathName(pathName) {
         std::cout << "Request constructor called" << std::endl;
+        std::cout << "uniqueID: " << uniqueID << std::endl;
+        std::cout << "opcode: " << opcode << std::endl;
+        std::cout << "pathName: " << pathName << std::endl;
         setPathName();
     }
 
@@ -25,7 +28,7 @@ long Request::getLastModifiedTime() {
     const std::string& filename = pathName;
     // Use stat to retrieve file information
     if (stat(filename.c_str(), &file_stat) != 0) {
-        std::cerr << "Error: Unable to get file information for " << filename << std::endl;
+        std::cerr << "ERROR: Unable to get file information for " << filename << std::endl;
         return -1; // Return -1 to indicate error
     }
 
