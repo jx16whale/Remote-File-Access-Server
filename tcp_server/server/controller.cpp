@@ -259,7 +259,7 @@ int main() {
                 // convert uniqueID to string
                 std::string uniqueIDStr = std::to_string(requestPtr->uniqueID);
                 // // add to hashmap current file:[machineid, expiry time]
-                globalHashMap.insert(requestPtr->pathName, uniqueIDStr,derivedPtr->expiryTime);
+                globalHashMap.insert(requestPtr->pathName, clientAddress,derivedPtr->expiryTime);
                 std::cout << "File " << requestPtr->pathName << " is being monitored" << std::endl;
             } else {
                 std::cerr << "Error: Unable to downcast pointer." << std::endl;
@@ -271,11 +271,28 @@ int main() {
         if (requestPtr->opcode == 2 || requestPtr->opcode == 5) {
             if (globalHashMap.contains(requestPtr->pathName)) {
                 std::cout << "File " << requestPtr->pathName << " is being monitored" << std::endl;
-                // get machineid
-                int reqid = std::stoi(globalHashMap.getValue(requestPtr->pathName));
+                // get clientaddress from hashmap
+                sockaddr_in monitoringSock = globalHashMap.getValue(requestPtr->pathName);
                 // create alert response
-                Response alertResponse = Response(reqid,responseObject.status,responseObject.timeModified,responseObject.data);
+                Response alertResponse = Response(responseObject.requestId,responseObject.status,responseObject.timeModified,responseObject.data);
                 // TODO AFTER CFM SEND SUCCESS send alertresponse back thru marshaller and socket
+                auto result2 = marshallReply(responseObject);
+                int alertEstSize = result2.first;
+                uint8_t* alertBufferPtrResponse = result2.second;
+                std::cout << "Length of marshalled response: " << alertEstSize << std::endl;
+                // Allocate memory for the char array
+                char* alertCharPtr = (char*)malloc((alertEstSize + 1) * sizeof(char));
+
+                std::cout << alertEstSize << std::endl;
+                std::cout << "Char array after marshall: ";
+                
+                // Iterate over the uint8_t array and copy the values to the char array
+                for (size_t i = 0; i < alertEstSize; i++) {
+                    alertCharPtr[i] = (char)alertBufferPtrResponse[i];
+                    std::cout << alertCharPtr[i] << ",";
+                }
+                sendto(serverSocket,alertCharPtr, alertEstSize,0, (const struct sockaddr *) &monitoringSock, len);
+                
                 // print debug + alert.data
                 std::cout << "Alert data: " << alertResponse.data << std::endl;
             } else {
@@ -289,7 +306,7 @@ int main() {
         int estSize = result.first;
         uint8_t* bufferPtrResponse = result.second;
         
-        std::cout << "Length of response: " << estSize << std::endl;
+        std::cout << "Length of marshalled response: " << estSize << std::endl;
 
         // Allocate memory for the char array
         char* charPtr = (char*)malloc((estSize + 1) * sizeof(char));
