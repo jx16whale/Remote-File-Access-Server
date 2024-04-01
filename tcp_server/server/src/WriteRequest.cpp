@@ -19,23 +19,42 @@ WriteRequest::WriteRequest(int uniqueID, int opcode, const std::string& pathName
       }
 
 bool writeFile(const std::string& filePath, int offset,const std::string bytesToWrite) {
-    // Open the file in binary mode for writing
-    std::ofstream file(filePath,
-                       std::ios::binary | std::ios::in | std::ios::out);
+    // Open the file in binary mode for reading and writing
+    std::fstream file(filePath, std::ios::binary | std::ios::in | std::ios::out);
     if (!file.is_open()) {
         std::cerr << "Error: Failed to open file " << filePath << std::endl;
         return false;
     }
 
-    // Seek to the specified offset
+    // Seek to the end of the file
+    file.seekp(0, std::ios::end);
+    std::streampos endPos = file.tellp();
+
+    // Read contents from offset to end of file
+    std::string fileContents;
+    if (endPos > offset) {
+        file.seekp(offset);
+        char buffer[1024];
+        std::streamsize bytesRead;
+        while ((bytesRead = file.readsome(buffer, sizeof(buffer))) > 0) {
+            fileContents.append(buffer, bytesRead);
+        }
+    }
+
+    // Move back to the insert position
     file.seekp(offset);
 
-    // Write the bytes to the file
+    // Write the bytes to insert
     file.write(bytesToWrite.data(), bytesToWrite.size());
+
+    // Write back the contents after the inserted bytes
+    if (!fileContents.empty()) {
+        file.write(fileContents.data(), fileContents.size());
+    }
 
     // Check for any write errors
     if (file.fail()) {
-        std::cerr << "Error: Failed to write to file " << filePath << std::endl;
+        std::cerr << "Error: Failed to insert into file " << filePath << std::endl;
         file.close();
         return false;
     }
