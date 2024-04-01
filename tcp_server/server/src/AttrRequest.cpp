@@ -12,7 +12,13 @@ AttrRequest::AttrRequest(int uniqueID, int opcode, const std::string& pathName)
 
 Response AttrRequest::process() {
     long timeMod = getLastModifiedTime();
+    int status;
+    if (timeMod == -1) {
+        status = 0;
+    } else {
+        status = 1;
+    }
     // print timemod
     std::cout << "Processed AttrRequest for " << pathName << " with time modified " << timeMod << std::endl;
-    return Response(AttrRequest::uniqueID, 1, timeMod, "file time modified is in timemodified variable");
+    return Response(AttrRequest::uniqueID, status, timeMod, "file time modified is in timemodified variable");
 }
