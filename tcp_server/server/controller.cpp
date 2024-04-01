@@ -37,7 +37,7 @@ int MAX_RESPONSE_BUFFER_LENGTH = 100;
 
 // create global variable globalhashmap
 HashMap globalHashMap;
-std::unordered_map<int, char*> duplicateRecordHashMap;
+std::unordered_map<int, std::pair<char*, int>> duplicateRecordHashMap;
 
 Request* unmarshallRequest(uint8_t *requestBuffer) {
     // Change the parameters name as you like
@@ -222,21 +222,12 @@ int main() {
 
         uint8_t *bufferPtr = bytesArray2;
         Request* requestPtr = unmarshallRequest(bufferPtr);
-        std::cout << "Unmarshalled Request" << std::endl;
-
-        // check if recordReqReply is true and if request.uniqueid is in duplicateRecordHashMap
-        if (recordReqReply && duplicateRecordHashMap.find(requestPtr->uniqueID) != duplicateRecordHashMap.end()) {
-            // if true, skip the process() and send the response back to client
-            // get the response from duplicateRecordHashMap
-            char* duplicateResponse = duplicateRecordHashMap[requestPtr->uniqueID];
-            // send response back to client
-            sendto(serverSocket,duplicateResponse, strlen(duplicateResponse),0, (const struct sockaddr *) &clientAddress, len);
-            std::cout << "Duplicate request found. Sending back the response to client." << std::endl;
-            continue;
-        }
-
-        // initialise buffer to store return value from services
-        std::vector<char> buffer(MAX_RESPONSE_BUFFER_LENGTH);
+        // get the response from duplicateRecordHashMap
+        std::pair<char*, int> duplicateResponsePair = duplicateRecordHashMap[requestPtr->uniqueID];
+        char* duplicateResponse = duplicateResponsePair.first;
+        int sizeOfDuplicateResponse = duplicateResponsePair.second;
+        // send response back to client
+        sendto(serverSocket, duplicateResponse, sizeOfDuplicateResponse, 0, (const struct sockaddr*)&clientAddress, len);
 
         // each request performs their own process() eg. write will write, read will read...
         Response responseObject = requestPtr->process();
@@ -306,7 +297,7 @@ int main() {
 
         // TODO before sending save it as a record in duplicateRecordHashMap
         if (recordReqReply) {
-            duplicateRecordHashMap[requestPtr->uniqueID] = charPtr;
+            duplicateRecordHashMap[requestPtr->uniqueID] = std::make_pair(charPtr, estSize);
             std::cout << "Request response saved in duplicateRecordHashMap" << std::endl;
         }
         sendto(serverSocket,charPtr, estSize,0, (const struct sockaddr *) &clientAddress, len);
