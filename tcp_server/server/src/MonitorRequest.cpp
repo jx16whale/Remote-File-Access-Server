@@ -18,5 +18,11 @@ MonitorRequest::MonitorRequest(int uniqueID, int opcode,
 Response MonitorRequest::process() {
     std::cout << "Processed Monitor for " << pathName << std::endl;
     long timeModified = getLastModifiedTime();
-    return Response(MonitorRequest::uniqueID, 1, timeModified, "MONITORING");
+    int status;
+    if (timeModified==-1) {
+        status = 0;
+    } else{
+        status = 1;
+    }
+    return Response(MonitorRequest::uniqueID, status, timeModified, "MONITORING");
 }

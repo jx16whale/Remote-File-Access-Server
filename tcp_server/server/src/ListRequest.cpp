@@ -32,5 +32,12 @@ Response ListRequest::process() {
     std::string result = listDirectory(ListRequest::pathName);
     std::cout << "Listed for " << pathName << std::endl;
     long timeModified = getLastModifiedTime();
-    return Response(ListRequest::uniqueID, 1, timeModified, result);
+    int status;
+    // if result contains Error then set status to 0
+    if (result.find("Error") != std::string::npos) {
+        status = 0;
+    } else {
+        status = 1;
+    }
+    return Response(ListRequest::uniqueID, status, timeModified, result);
 }
