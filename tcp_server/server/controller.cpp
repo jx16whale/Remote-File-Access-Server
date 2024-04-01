@@ -222,13 +222,20 @@ int main() {
 
         uint8_t *bufferPtr = bytesArray2;
         Request* requestPtr = unmarshallRequest(bufferPtr);
-        // get the response from duplicateRecordHashMap
-        std::pair<char*, int> duplicateResponsePair = duplicateRecordHashMap[requestPtr->uniqueID];
-        char* duplicateResponse = duplicateResponsePair.first;
-        int sizeOfDuplicateResponse = duplicateResponsePair.second;
-        // send response back to client
-        sendto(serverSocket, duplicateResponse, sizeOfDuplicateResponse, 0, (const struct sockaddr*)&clientAddress, len);
+        std::cout << "Unmarshalled Request" << std::endl;
+        // check if recordReqReply is true and if request.uniqueid is in duplicateRecordHashMap
+        if (recordReqReply && duplicateRecordHashMap.find(requestPtr->uniqueID) != duplicateRecordHashMap.end()) {
 
+            // get the response from duplicateRecordHashMap
+            std::pair<char*, int> duplicateResponsePair = duplicateRecordHashMap[requestPtr->uniqueID];
+            char* duplicateResponse = duplicateResponsePair.first;
+            int sizeOfDuplicateResponse = duplicateResponsePair.second;
+            // send response back to client
+            sendto(serverSocket, duplicateResponse, sizeOfDuplicateResponse, 0, (const struct sockaddr*)&clientAddress, len);
+            std::cout << "Duplicate request found. Sending back the response to client." << std::endl;
+            continue;
+        }
+        
         // each request performs their own process() eg. write will write, read will read...
         Response responseObject = requestPtr->process();
         
