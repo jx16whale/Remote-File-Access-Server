@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <utility>  // For std::pair
 #include <vector>
-#include "..\include\HashMap.h"
+#include ".\include\HashMap.h"
 #include ".\include\ListRequest.h"
 #include ".\include\MonitorRequest.h"
 #include ".\include\ReadRequest.h"

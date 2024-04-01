@@ -17,9 +17,13 @@ Response Request::process() {
     return Response(123,1,123,"wrong");
 };
 
+#include <filesystem> // Include the necessary header file
+
 void Request::setPathName() {
     // Implement setting pathName
-    pathName = "C:\\Users\\chunw\\ForBen\\tcp_server\\file_sys\\"+pathName;
+    std::filesystem::path path = "file_sys/" + pathName; // Remove the unnecessary std::filesystem:: prefix and use forward slash instead of backslash
+    pathName = (std::filesystem::current_path().parent_path() / path).string();
+    // pathName = "C:/Users/chunw/ForBen/tcp_server/file_sys/" + pathName; // Use forward slash instead of backslash
     std::cout << "Setting pathName for " << pathName << std::endl;
 };
 
