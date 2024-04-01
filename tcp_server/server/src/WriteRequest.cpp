@@ -17,7 +17,7 @@ WriteRequest::WriteRequest(int uniqueID, int opcode, const std::string& pathName
         std::cout << "Bytes to write: " << bytesToWrite << std::endl;
 
       }
-
+// TODO: if offset larger than size of file then reject
 bool writeFile(const std::string& filePath, int offset,const std::string bytesToWrite) {
     // Open the file in binary mode for reading and writing
     std::fstream file(filePath, std::ios::binary | std::ios::in | std::ios::out);
@@ -40,6 +40,13 @@ bool writeFile(const std::string& filePath, int offset,const std::string bytesTo
             fileContents.append(buffer, bytesRead);
         }
     }
+    // if offset<sizeoffile return false TODO: test this
+    if (offset > endPos) {
+        std::cerr << "Error: Offset is beyond the file size." << std::endl;
+        file.close();
+        return false;
+    }
+
 
     // Move back to the insert position
     file.seekp(offset);
