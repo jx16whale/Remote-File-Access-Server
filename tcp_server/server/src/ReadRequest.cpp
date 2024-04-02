@@ -69,5 +69,9 @@ Response ReadRequest::process() {
 
     //convert vector char to string
     std::string data(buffer.begin(), buffer.end());
+    if (status == 0) {
+        data = "ERROR: Failed to read file.";
+        std::cout << "ERROR: Failed to read file." << std::endl;
+    }
     return Response(uniqueID,status,timeModified,data);
 }

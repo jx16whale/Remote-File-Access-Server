@@ -112,6 +112,9 @@ Response DeleteRequest::process() {
     if (fileContents.empty()) {
         std::cout << "Failed to read file." << std::endl;
     }
+    if (status == 0 ){
+        fileContents = "Failed to delete content from file.";
+    }
 
     //convert vector char to string
     return Response(uniqueID,status,timeModified,fileContents);

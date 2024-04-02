@@ -24,5 +24,10 @@ Response MonitorRequest::process() {
     } else{
         status = 1;
     }
-    return Response(MonitorRequest::uniqueID, status, timeModified, "MONITORING");
+    std::string data = "MONITORING";
+    if (status == 0) {
+        std::cout << "ERROR: Failed to read file." << std::endl;
+        data = "ERROR: Failed to read file.";
+    }
+    return Response(MonitorRequest::uniqueID, status, timeModified, data);
 }

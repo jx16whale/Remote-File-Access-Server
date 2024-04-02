@@ -108,6 +108,10 @@ Response WriteRequest::process() {
     if (fileContents.empty()) {
         std::cout << "ERROR: Failed to read file." << std::endl;
     }
+    if (intStatus == 0 ){
+        fileContents = "ERROR: Failed to write to file.";
+        std::cout << "ERROR: Failed to write to file." << std::endl;
+    }
 
     return Response(uniqueID, intStatus,timeModified, fileContents);
 }
