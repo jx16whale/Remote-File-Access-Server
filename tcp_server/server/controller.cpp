@@ -144,6 +144,11 @@ std::pair<int, uint8_t*> marshallReply(Response reply) {
 }
 
 int main() {
+    // // TESTING
+    // MonitorRequest* readRequest = new MonitorRequest(1, 3, "file.txt", 5);
+    // readRequest->process();
+    // return 0;
+    // // END OF TESTING
 
     std::string input;
     bool recordReqReply;
