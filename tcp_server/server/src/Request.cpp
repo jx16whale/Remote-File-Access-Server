@@ -4,10 +4,10 @@
 
 Request::Request(int uniqueID, int opcode, const std::string& pathName)
     : uniqueID(uniqueID), opcode(opcode), pathName(pathName) {
-        std::cout << "Request constructor called" << std::endl;
-        std::cout << "uniqueID: " << uniqueID << std::endl;
-        std::cout << "opcode: " << opcode << std::endl;
-        std::cout << "pathName: " << pathName << std::endl;
+        // std::cout << "Request constructor called" << std::endl;
+        // std::cout << "uniqueID: " << uniqueID << std::endl;
+        // std::cout << "opcode: " << opcode << std::endl;
+        // std::cout << "pathName: " << pathName << std::endl;
         setPathName();
     }
 

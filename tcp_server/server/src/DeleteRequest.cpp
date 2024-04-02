@@ -17,8 +17,8 @@ DeleteRequest::DeleteRequest(int uniqueID, int opcode, const std::string& pathNa
       offset(offset),
       numBytesToDel(numBytesToDel) {
         std::cout << "DeleteReq constructor called" << std::endl;
-        std::cout << "Offset: " << offset << std::endl;
-        std::cout << "numBytesToDel: " << numBytesToDel << std::endl;
+        // std::cout << "Offset: " << offset << std::endl;
+        // std::cout << "numBytesToDel: " << numBytesToDel << std::endl;
       }
 
 bool readFileWithOffsetAndPrint(const std::string& filename, std::size_t offset, std::size_t sizeToDelete) {

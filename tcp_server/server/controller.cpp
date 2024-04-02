@@ -41,7 +41,7 @@ std::unordered_map<int, std::pair<char*, int>> duplicateRecordHashMap;
 
 Request* unmarshallRequest(uint8_t *requestBuffer) {
     // Change the parameters name as you like
-    std::cout << "Debug:" << std::endl;
+    // std::cout << "Debug:" << std::endl;
     int requestID = Unmarshaller::unmarshallInt(&requestBuffer);
     int opcode = Unmarshaller::unmarshallInt(&requestBuffer);
 
@@ -94,7 +94,7 @@ Request* unmarshallRequest(uint8_t *requestBuffer) {
             std::string pathname = Unmarshaller::unmarshallString(&requestBuffer);
             int offset = Unmarshaller::unmarshallInt(&requestBuffer);
             int numBytesToDel = Unmarshaller::unmarshallInt(&requestBuffer);
-            std::cout << "numbytestodel: " << numBytesToDel << std::endl;
+            // std::cout << "numbytestodel: " << numBytesToDel << std::endl;
             return new DeleteRequest(requestID,
                                    opcode,
                                    pathname,
@@ -134,28 +134,28 @@ std::pair<int, uint8_t*> marshallReply(Response reply) {
     Marshaller::marshallInt(&ptrToptr, status);
     Marshaller::marshallLong(&ptrToptr, timeModified);
     Marshaller::marshallString(&ptrToptr, paddingSize, data.c_str());
-    //print replybuffer
-    std::cout << "ReplyBuffer in marshallReply: ";
-    for (int i = 0; i < estimatedSize; i++) {
-        std::cout << static_cast<int>(replyBuffer[i]) << ",";
-    }
-    std::cout << std::endl;
+    // // print replybuffer
+    // std::cout << "ReplyBuffer in marshallReply: ";
+    // for (int i = 0; i < estimatedSize; i++) {
+    //     std::cout << static_cast<int>(replyBuffer[i]) << ",";
+    // }
+    // std::cout << std::endl;
     return std::make_pair(estimatedSize, replyBuffer);
 }
 
 int main() {
-    // TESTING
-    WriteRequest* readRequest = new WriteRequest(1, 2, "file.txt", 1000000000, "Hello World");
-    readRequest->process();
-    return 0;
-    // END OF TESTING
+    // // TESTING
+    // WriteRequest* readRequest = new WriteRequest(1, 2, "file.txt", 1000000000, "Hello World");
+    // readRequest->process();
+    // return 0;
+    // // END OF TESTING
 
     std::string input;
     bool recordReqReply;
     // Read input from standard input
     std::cout << "Enter 0 for AT MOST ONCE or 1 for AT LEAST ONCE: ";
     std::cin >> input;
-    // Check if the input is "0" or "1"
+    // Check if the input is "0" or "1"  
     if (input == "0") {
         std::cout << "Input is 0." << std::endl;
         recordReqReply = true;
@@ -215,10 +215,10 @@ int main() {
                       << std::endl;
         } else {
             std::cout << "Received " << bytesReceived << " bytes: ";
-            for (int i = 0; i < bytesReceived; ++i) {
-                std::cout << std::hex << (int)receiveBuffer[i] << " ";
-            }
-            std::cout << std::endl;
+            // for (int i = 0; i < bytesReceived; ++i) {
+            //     std::cout << std::hex << (int)receiveBuffer[i] << " ";
+            // }
+            // std::cout << std::endl;
         }
         uint8_t bytesArray2[sizeof(receiveBuffer)];
         for (int i = 0; i < sizeof(receiveBuffer); i++) {
@@ -255,6 +255,19 @@ int main() {
                 // // add to hashmap current file:[machineid, expiry time]
                 globalHashMap.insert(requestPtr->pathName, clientAddress,derivedPtr->expiryTime);
                 std::cout << "File " << requestPtr->pathName << " is being monitored" << std::endl;
+                // if response failed then send error to client
+                if (responseObject.status==0){
+                    auto result3 = marshallReply(responseObject);
+                    int monitorfail = result3.first;
+                    uint8_t* monitorFailRes = result3.second;
+                    char* chptr = (char*)malloc((monitorfail + 1) * sizeof(char));
+                    for (size_t i = 0; i < monitorfail; i++) {
+                        chptr[i] = (char)monitorFailRes[i];
+                        // std::cout << alertCharPtr[i] << ",";
+                    }
+                    sendto(serverSocket,chptr, monitorfail,0, (const struct sockaddr *) &clientAddress, len);
+                }
+                // if response okay then just continue and not send to client
             } else {
                 std::cerr << "Error: Unable to downcast pointer." << std::endl;
             }
@@ -280,10 +293,10 @@ int main() {
                 // Iterate over the uint8_t array and copy the values to the char array
                 for (size_t i = 0; i < alertEstSize; i++) {
                     alertCharPtr[i] = (char)alertBufferPtrResponse[i];
-                    std::cout << alertCharPtr[i] << ",";
+                    // std::cout << alertCharPtr[i] << ",";
                 }
                 sendto(serverSocket,alertCharPtr, alertEstSize,0, (const struct sockaddr *) &monitoringSock, len);
-                std::cout << "\n";
+                // std::cout << "\n";
             } else {
                 std::cout << "File " << requestPtr->pathName << "that you are editing is not being monitored"
                         << std::endl;
@@ -298,13 +311,13 @@ int main() {
         // Allocate memory for the char array
         char* charPtr = (char*)malloc((estSize + 1) * sizeof(char));
 
-        std::cout << estSize << std::endl;
-        std::cout << "Char array after marshall: ";
+        // std::cout << estSize << std::endl;
+        // std::cout << "Char array after marshall: ";
         
         // Iterate over the uint8_t array and copy the values to the char array
         for (size_t i = 0; i < estSize; i++) {
             charPtr[i] = (char)bufferPtrResponse[i];
-            std::cout << charPtr[i] << ",";
+            // std::cout << charPtr[i] << ",";
         }
 
         // TODO before sending save it as a record in duplicateRecordHashMap

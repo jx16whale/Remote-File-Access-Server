@@ -13,8 +13,8 @@ ReadRequest::ReadRequest(int uniqueID, int opcode, const std::string& pathName,
       offset(offset),
       numBytesToRead(numBytesToRead) {
         std::cout << "ReadRequest constructor called" << std::endl;
-        std::cout << "offset: " << offset << std::endl;
-        std::cout << "numBytesToRead: " << numBytesToRead << std::endl;
+        // std::cout << "offset: " << offset << std::endl;
+        // std::cout << "numBytesToRead: " << numBytesToRead << std::endl;
       }
 
 std::vector<char> readFile2(const std::string& filePath) {
