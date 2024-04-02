@@ -102,18 +102,19 @@ Response DeleteRequest::process() {
     else{
         status=0;
         std::cout << "DeleteRequest: Failed to delete content from " << pathName << " with offset ";
-    
     };
 
     // assign timeModified to current time
     long timeModified = getLastModifiedTime();
 
     std::string fileContents = readFile(pathName);
-    if (fileContents.empty()) {
+    if (fileContents.empty() and status == 0) {
         std::cout << "Failed to read file." << std::endl;
-    }
-    if (status == 0 ){
-        fileContents = "Failed to delete content from file.";
+        fileContents = "ERROR: Failed to read file.";
+    }else if (status==0){
+        fileContents = "ERROR: Failed to delete content from file.";
+    }else{
+        std::cout << "Successfully deleted content from file." << std::endl;
     }
 
     //convert vector char to string
