@@ -22,6 +22,7 @@ Fault tolerance:
     - Records responses
     - If request is repeated (check message-id+machine-id -> requestId), resend recorded response
 
-TODO:
-find out the stat behavior and extract wtv is needed, metadata of file -> what is required?
-
+To run:
+- build server in /server dir with `g++ ./controller.cpp ./src/* -o controller -lws2_32`
+- run controller
+- wait for client to connect
